@@ -538,6 +538,15 @@ footer{background:#0f1013;color:#9fa0a9;padding:70px 0 34px;font-size:14px}
   .plan{padding:32px 26px}
   .m-main{padding:26px 22px}
 }
+/* =========================================================
+   CURSOR MONEY TRAIL (desktop only)
+   ========================================================= */
+.money{position:fixed;left:0;top:0;z-index:150;pointer-events:none;font-family:var(--font-head);font-weight:700;color:var(--red);text-shadow:0 0 8px rgba(227,23,43,.45);user-select:none;will-change:transform,opacity;animation:moneyFloat .9s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes moneyFloat{
+  0%{opacity:0;transform:translate(var(--x),var(--y)) scale(.4) rotate(0deg)}
+  15%{opacity:.95}
+  100%{opacity:0;transform:translate(calc(var(--x) + var(--dx)),calc(var(--y) - 34px)) scale(1) rotate(var(--r))}
+}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
   html{scroll-behavior:auto}
@@ -1384,6 +1393,33 @@ $$(".s-card").forEach(card => {
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.classList.contains("show")) close(); });
 
+})();
+
+/* =========================================================
+   CURSOR MONEY TRAIL — small $ signs follow the mouse.
+   Desktop/mouse only; off on touch screens and for reduced-motion users.
+   ========================================================= */
+(function(){
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const MAX = 18;          // most $ signs on screen at once
+  const SPACING = 26;      // px the mouse must travel between $ signs
+  let lastX = null, lastY = null, live = 0;
+  window.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
+    if (lastX !== null && Math.hypot(e.clientX - lastX, e.clientY - lastY) < SPACING) return;
+    lastX = e.clientX; lastY = e.clientY;
+    if (live >= MAX) return;
+    const el = document.createElement("span");
+    el.className = "money"; el.textContent = "$"; el.setAttribute("aria-hidden", "true");
+    el.style.fontSize = (11 + Math.random() * 6).toFixed(1) + "px";
+    el.style.setProperty("--x", (e.clientX + 8) + "px");
+    el.style.setProperty("--y", (e.clientY + 6) + "px");
+    el.style.setProperty("--dx", ((Math.random() - .5) * 24).toFixed(1) + "px");
+    el.style.setProperty("--r", ((Math.random() - .5) * 40).toFixed(1) + "deg");
+    document.body.appendChild(el); live++;
+    el.addEventListener("animationend", () => { el.remove(); live--; });
+  }, {passive:true});
 })();
 </script>
 </body>
